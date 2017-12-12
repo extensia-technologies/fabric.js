@@ -35,11 +35,12 @@
   },
   "license": "MIT",
   "scripts": {
-    "build": "node build.js modules=ALL exclude=json,gestures",
+    "build": "node build.js modules=ALL exclude=serialization,parser,image_filters,easing,node,freedrawing,gestures,animation,json no-svg-export",
     "build_export": "npm run build && npm run export_dist_to_site",
     "build:watch": "onchange 'src/**/**' 'test/**/**' 'HEADER.js' 'lib/**/**' -- npm run build_export",
     "build_with_gestures": "node build.js modules=ALL exclude=json",
     "test": "node test.js",
+    "docs": "jsdoc dist/fabric.js",
     "lint": "eslint --config .eslintrc.json src",
     "lint_tests": "eslint test/unit --config .eslintrc_tests",
     "export_dist_to_site": "cp dist/fabric.js ../fabricjs.com/lib/fabric.js && cp -r src HEADER.js lib ../fabricjs.com/build/files/",
@@ -48,18 +49,19 @@
   },
   "optionalDependencies": {
     "canvas": "1.6.x",
-    "jsdom": "3.x.x",
+    "jsdom": "9.x.x",
     "xmldom": "0.1.x"
   },
   "devDependencies": {
-    "uglify-js": "2.7.x",
-    "eslint": "2.x.x",
-    "qunit": "0.9.x",
+    "eslint": "4.7.x",
     "istanbul": "0.4.x",
-    "onchange": "^3.0.2"
+    "jsdoc": "^3.5.5",
+    "onchange": "^3.x.x",
+    "qunit": "1.x.x",
+    "uglify-js": "3.1.x"
   },
   "engines": {
-    "node": ">=0.4.0"
+    "node": ">=4.0.0"
   },
   "main": "./dist/fabric.js"
 }

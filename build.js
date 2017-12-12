@@ -349,3 +349,11 @@ else {
     });
   });
 }
+
+// Add Typings
+process.chdir('../');
+fs.copyFile('fabric.d.ts', 'dist/fabric.d.ts', function (err) {
+  if (err) {
+    throw err;
+  }
+});

@@ -666,7 +666,9 @@
       this.viewportTransform = vpt;
       for (var i = 0, len = this._objects.length; i < len; i++) {
         object = this._objects[i];
-        object.group || object.setCoords(ignoreVpt, skipAbsolute);
+        if (object) {
+          object.group || object.setCoords(ignoreVpt, skipAbsolute);
+        }
       }
       if (activeGroup) {
         activeGroup.setCoords(ignoreVpt, skipAbsolute);

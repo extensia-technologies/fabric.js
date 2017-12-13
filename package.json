@@ -10,6 +10,7 @@
       "email": "andreabogazzi79@gmail.com"
     }
   ],
+  "types": "index.d.ts",
   "keywords": [
     "canvas",
     "graphic",

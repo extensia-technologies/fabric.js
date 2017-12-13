@@ -914,6 +914,32 @@ export namespace fabric {
     preserveObjectStacking?: boolean;
 
     /**
+     * Indicates the angle that an object will lock to while rotating.
+     */
+    snapAngle?: number;
+
+    /**
+     * Indicates the distance from the snapAngle the rotation will lock to the snapAngle.
+     * When `null`, the snapThreshold will default to the snapAngle.
+     */
+    snapThreshold?: null|number;
+
+    /**
+     * Indicates if the right click on canvas can output the context menu or not
+     */
+    stopContextMenu?: boolean;
+
+    /**
+     * Indicates if the canvas can fire right click events
+     */
+    fireRightClick?: boolean;
+
+    /**
+     * Indicates if the canvas can fire middle click events
+     */
+    fireMiddleClick?: boolean;
+
+    /**
      * The transformation (in the format of Canvas transform) which focuses the viewport
      */
     viewportTransform?: number[];
@@ -2308,6 +2334,16 @@ export namespace fabric {
     lockUniScaling?: boolean;
 
     /**
+     * When `true`, object horizontal skewing is locked
+     */
+    lockSkewingX?: boolean;
+
+    /**
+     * When `true`, object vertical skewing is locked
+     */
+    lockSkewingY?: boolean,
+
+    /**
      * When `true`, object cannot be flipped by scaling into negative values
      */
     lockScalingFlip?: boolean;
@@ -2327,6 +2363,9 @@ export namespace fabric {
   }
 
   class Object {
+    // TODO Fix when refactored
+    canvas: Canvas;
+
     getCurrentWidth(): number;
 
     getCurrentHeight(): number;
@@ -2390,6 +2429,14 @@ export namespace fabric {
     setShadow(options: any): Object;
 
     getShadow(): Object;
+
+    setStroke(stroke: string): Object;
+
+    getStroke(): String;
+
+    setStrokeWidth(strokeWidth: Number): Object;
+
+    getStrokeWidth(): Number;
 
     stateProperties: any[];
 
@@ -3730,6 +3777,270 @@ export namespace fabric {
      * @param object Object to create an instance from
      */
     static fromObject(object: any): IText;
+  }
+
+  interface Textbox extends Text, IITextOptions {
+  }
+
+  class Textbox extends Object {
+    /**
+     * Constructor
+     * @param text Text string
+     * @param [options] Options object
+     */
+    constructor(text: string, options?: IITextOptions);
+
+    /**
+     * Returns true if object has no styling
+     */
+    isEmptyStyles(): boolean;
+
+    render(ctx: CanvasRenderingContext2D, noTransform: boolean): void;
+
+    /**
+     * Returns object representation of an instance
+     * @param [propertiesToInclude] Any properties that you might want to additionally include in the output
+     * @return object representation of an instance
+     */
+    toObject(propertiesToInclude?: any[]): Object;
+
+    setText(value: string): Text;
+
+    /**
+     * Sets selection start (left boundary of a selection)
+     * @param index Index to set selection start to
+     */
+    setSelectionStart(index: number): void;
+
+    /**
+     * Sets selection end (right boundary of a selection)
+     * @param index Index to set selection end to
+     */
+    setSelectionEnd(index: number): void;
+
+    /**
+     * Gets style of a current selection/cursor (at the start position)
+     * @param [startIndex] Start index to get styles at
+     * @param [endIndex] End index to get styles at
+     * @return styles Style object at a specified (or current) index
+     */
+    getSelectionStyles(startIndex: number, endIndex: number): any;
+
+    /**
+     * Sets style of a current selection
+     * @param [styles] Styles object
+     * @return thisArg
+     * @chainable
+     */
+    setSelectionStyles(styles: any): Text;
+
+    /**
+     * Renders cursor or selection (depending on what exists)
+     */
+    renderCursorOrSelection(): void;
+
+    /**
+     * Returns 2d representation (lineIndex and charIndex) of cursor (or selection start)
+     * @param [selectionStart] Optional index. When not given, current selectionStart is used.
+     */
+    get2DCursorLocation(selectionStart?: number): void;
+
+    /**
+     * Returns complete style of char at the current cursor
+     * @param lineIndex Line index
+     * @param charIndex Char index
+     * @return Character style
+     */
+    getCurrentCharStyle(lineIndex: number, charIndex: number): any;
+
+    /**
+     * Returns fontSize of char at the current cursor
+     * @param lineIndex Line index
+     * @param charIndex Char index
+     * @return Character font size
+     */
+    getCurrentCharFontSize(lineIndex: number, charIndex: number): number;
+
+    /**
+     * Returns color (fill) of char at the current cursor
+     * @param lineIndex Line index
+     * @param charIndex Char index
+     * @return Character color (fill)
+     */
+    getCurrentCharColor(lineIndex: number, charIndex: number): string;
+
+    /**
+     * Renders cursor
+     */
+    renderCursor(boundaries: any): void;
+
+    /**
+     * Renders text selection
+     * @param chars Array of characters
+     * @param boundaries Object with left/top/leftOffset/topOffset
+     */
+    renderSelection(chars: string[], boundaries: any): void;
+
+    // functions from itext behavior mixin
+    // ------------------------------------------------------------------------------------------------------------------------
+    /**
+     * Initializes all the interactive behavior of IText
+     */
+    initBehavior(): void;
+
+    /**
+     * Initializes "selected" event handler
+     */
+    initSelectedHandler(): void;
+
+    /**
+     * Initializes "added" event handler
+     */
+    initAddedHandler(): void;
+
+    initRemovedHandler(): void;
+
+    /**
+     * Initializes delayed cursor
+     */
+    initDelayedCursor(restart: boolean): void;
+
+    /**
+     * Aborts cursor animation and clears all timeouts
+     */
+    abortCursorAnimation(): void;
+
+    /**
+     * Selects entire text
+     */
+    selectAll(): void;
+
+    /**
+     * Returns selected text
+     */
+    getSelectedText(): string;
+
+    /**
+     * Find new selection index representing start of current word according to current selection index
+     * @param startFrom Surrent selection index
+     * @return New selection index
+     */
+    findWordBoundaryLeft(startFrom: number): number;
+
+    /**
+     * Find new selection index representing end of current word according to current selection index
+     * @param startFrom Current selection index
+     * @return New selection index
+     */
+    findWordBoundaryRight(startFrom: number): number;
+
+    /**
+     * Find new selection index representing start of current line according to current selection index
+     * @param startFrom Current selection index
+     */
+    findLineBoundaryLeft(startFrom: number): number;
+
+    /**
+     * Find new selection index representing end of current line according to current selection index
+     * @param startFrom Current selection index
+     */
+    findLineBoundaryRight(startFrom: number): number;
+
+    /**
+     * Returns number of newlines in selected text
+     */
+    getNumNewLinesInSelectedText(): number;
+
+    /**
+     * Finds index corresponding to beginning or end of a word
+     * @param selectionStart Index of a character
+     * @param direction: 1 or -1
+     */
+    searchWordBoundary(selectionStart: number, direction: number): number;
+
+    /**
+     * Selects a word based on the index
+     * @param selectionStart Index of a character
+     */
+    selectWord(selectionStart: number): void;
+
+    /**
+     * Selects a line based on the index
+     * @param selectionStart Index of a character
+     */
+    selectLine(selectionStart: number): void;
+
+    /**
+     * Enters editing state
+     */
+    enterEditing(): IText;
+
+    /**
+     * Initializes "mousemove" event handler
+     */
+    initMouseMoveHandler(): void;
+
+    /**
+     * Exits from editing state
+     * @return thisArg
+     * @chainable
+     */
+    exitEditing(): IText;
+
+    /**
+     * Inserts a character where cursor is (replacing selection if one exists)
+     * @param _chars Characters to insert
+     */
+    insertChars(_chars: string, useCopiedStyle?: boolean): void;
+
+    /**
+     * Inserts new style object
+     * @param lineIndex Index of a line
+     * @param charIndex Index of a char
+     * @param isEndOfLine True if it's end of line
+     */
+    insertNewlineStyleObject(lineIndex: number, charIndex: number, isEndOfLine: boolean): void;
+
+    /**
+     * Inserts style object for a given line/char index
+     * @param lineIndex Index of a line
+     * @param charIndex Index of a char
+     * @param [style] Style object to insert, if given
+     */
+    insertCharStyleObject(lineIndex: number, charIndex: number, isEndOfLine: boolean): void;
+
+    /**
+     * Inserts style object(s)
+     * @param _chars Characters at the location where style is inserted
+     * @param isEndOfLine True if it's end of line
+     * @param [useCopiedStyle] Style to insert
+     */
+    insertStyleObjects(_chars: string, isEndOfLine: boolean, useCopiedStyle?: boolean): void;
+
+    /**
+     * Shifts line styles up or down
+     * @param lineIndex Index of a line
+     * @param offset Can be -1 or +1
+     */
+    shiftLineStyles(lineIndex: number, offset: number): void;
+
+    /**
+     * Removes style object
+     * @param isBeginningOfLine True if cursor is at the beginning of line
+     * @param [index] Optional index. When not given, current selectionStart is used.
+     */
+    removeStyleObject(isBeginningOfLine: boolean, index?: number): void;
+
+    /**
+     * Inserts new line
+     */
+    insertNewline(): void;
+
+    /**
+     * Returns fabric.Textbox instance from an object representation
+     * @param object Object to create an instance from
+     */
+    static fromObject(object: any): Textbox;
   }
 
   interface ITriangleOptions extends IObjectOptions {

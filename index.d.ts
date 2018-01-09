@@ -2349,6 +2349,11 @@ export namespace fabric {
     lockScalingFlip?: boolean;
 
     /**
+     * Indicates the angle that an object will lock to while rotating.
+     */
+    snapAngle?: number;
+
+    /**
      * Not used by fabric, just for convenience
      */
     name?: string;

@@ -1480,6 +1480,67 @@ if (typeof console !== "undefined") {
     });
 }
 
+(function() {
+    function noop() {
+        return false;
+    }
+    function animate(options) {
+        requestAnimFrame(function(timestamp) {
+            options || (options = {});
+            var start = timestamp || +new Date(), duration = options.duration || 500, finish = start + duration, time, onChange = options.onChange || noop, abort = options.abort || noop, onComplete = options.onComplete || noop, easing = options.easing || function(t, b, c, d) {
+                return -c * Math.cos(t / d * (Math.PI / 2)) + c + b;
+            }, startValue = "startValue" in options ? options.startValue : 0, endValue = "endValue" in options ? options.endValue : 100, byValue = options.byValue || endValue - startValue;
+            options.onStart && options.onStart();
+            (function tick(ticktime) {
+                if (abort()) {
+                    onComplete(endValue, 1, 1);
+                    return;
+                }
+                time = ticktime || +new Date();
+                var currentTime = time > finish ? duration : time - start, timePerc = currentTime / duration, current = easing(currentTime, startValue, byValue, duration), valuePerc = Math.abs((current - startValue) / byValue);
+                onChange(current, valuePerc, timePerc);
+                if (time > finish) {
+                    options.onComplete && options.onComplete();
+                    return;
+                }
+                requestAnimFrame(tick);
+            })(start);
+        });
+    }
+    var _requestAnimFrame = fabric.window.requestAnimationFrame || fabric.window.webkitRequestAnimationFrame || fabric.window.mozRequestAnimationFrame || fabric.window.oRequestAnimationFrame || fabric.window.msRequestAnimationFrame || function(callback) {
+        fabric.window.setTimeout(callback, 1e3 / 60);
+    };
+    function requestAnimFrame() {
+        return _requestAnimFrame.apply(fabric.window, arguments);
+    }
+    fabric.util.animate = animate;
+    fabric.util.requestAnimFrame = requestAnimFrame;
+})();
+
+(function() {
+    function calculateColor(begin, end, pos) {
+        var color = "rgba(" + parseInt(begin[0] + pos * (end[0] - begin[0]), 10) + "," + parseInt(begin[1] + pos * (end[1] - begin[1]), 10) + "," + parseInt(begin[2] + pos * (end[2] - begin[2]), 10);
+        color += "," + (begin && end ? parseFloat(begin[3] + pos * (end[3] - begin[3])) : 1);
+        color += ")";
+        return color;
+    }
+    function animateColor(fromColor, toColor, duration, options) {
+        var startColor = new fabric.Color(fromColor).getSource(), endColor = new fabric.Color(toColor).getSource();
+        options = options || {};
+        fabric.util.animate(fabric.util.object.extend(options, {
+            duration: duration || 500,
+            startValue: startColor,
+            endValue: endColor,
+            byValue: endColor,
+            easing: function(currentTime, startValue, byValue, duration) {
+                var posValue = options.colorEasing ? options.colorEasing(currentTime, duration) : 1 - Math.cos(currentTime / duration * (Math.PI / 2));
+                return calculateColor(startValue, byValue, posValue);
+            }
+        }));
+    }
+    fabric.util.animateColor = animateColor;
+})();
+
 (function(global) {
     "use strict";
     var fabric = global.fabric || (global.fabric = {});
@@ -5685,6 +5746,138 @@ fabric.util.object.extend(fabric.Object.prototype, {
         }
     });
 })();
+
+fabric.util.object.extend(fabric.StaticCanvas.prototype, {
+    FX_DURATION: 500,
+    fxCenterObjectH: function(object, callbacks) {
+        callbacks = callbacks || {};
+        var empty = function() {}, onComplete = callbacks.onComplete || empty, onChange = callbacks.onChange || empty, _this = this;
+        fabric.util.animate({
+            startValue: object.get("left"),
+            endValue: this.getCenter().left,
+            duration: this.FX_DURATION,
+            onChange: function(value) {
+                object.set("left", value);
+                _this.renderAll();
+                onChange();
+            },
+            onComplete: function() {
+                object.setCoords();
+                onComplete();
+            }
+        });
+        return this;
+    },
+    fxCenterObjectV: function(object, callbacks) {
+        callbacks = callbacks || {};
+        var empty = function() {}, onComplete = callbacks.onComplete || empty, onChange = callbacks.onChange || empty, _this = this;
+        fabric.util.animate({
+            startValue: object.get("top"),
+            endValue: this.getCenter().top,
+            duration: this.FX_DURATION,
+            onChange: function(value) {
+                object.set("top", value);
+                _this.renderAll();
+                onChange();
+            },
+            onComplete: function() {
+                object.setCoords();
+                onComplete();
+            }
+        });
+        return this;
+    },
+    fxRemove: function(object, callbacks) {
+        callbacks = callbacks || {};
+        var empty = function() {}, onComplete = callbacks.onComplete || empty, onChange = callbacks.onChange || empty, _this = this;
+        fabric.util.animate({
+            startValue: object.get("opacity"),
+            endValue: 0,
+            duration: this.FX_DURATION,
+            onStart: function() {
+                object.set("active", false);
+            },
+            onChange: function(value) {
+                object.set("opacity", value);
+                _this.renderAll();
+                onChange();
+            },
+            onComplete: function() {
+                _this.remove(object);
+                onComplete();
+            }
+        });
+        return this;
+    }
+});
+
+fabric.util.object.extend(fabric.Object.prototype, {
+    animate: function() {
+        if (arguments[0] && typeof arguments[0] === "object") {
+            var propsToAnimate = [], prop, skipCallbacks;
+            for (prop in arguments[0]) {
+                propsToAnimate.push(prop);
+            }
+            for (var i = 0, len = propsToAnimate.length; i < len; i++) {
+                prop = propsToAnimate[i];
+                skipCallbacks = i !== len - 1;
+                this._animate(prop, arguments[0][prop], arguments[1], skipCallbacks);
+            }
+        } else {
+            this._animate.apply(this, arguments);
+        }
+        return this;
+    },
+    _animate: function(property, to, options, skipCallbacks) {
+        var _this = this, propPair;
+        to = to.toString();
+        if (!options) {
+            options = {};
+        } else {
+            options = fabric.util.object.clone(options);
+        }
+        if (~property.indexOf(".")) {
+            propPair = property.split(".");
+        }
+        var currentValue = propPair ? this.get(propPair[0])[propPair[1]] : this.get(property);
+        if (!("from" in options)) {
+            options.from = currentValue;
+        }
+        if (~to.indexOf("=")) {
+            to = currentValue + parseFloat(to.replace("=", ""));
+        } else {
+            to = parseFloat(to);
+        }
+        fabric.util.animate({
+            startValue: options.from,
+            endValue: to,
+            byValue: options.by,
+            easing: options.easing,
+            duration: options.duration,
+            abort: options.abort && function() {
+                return options.abort.call(_this);
+            },
+            onChange: function(value, valueProgress, timeProgress) {
+                if (propPair) {
+                    _this[propPair[0]][propPair[1]] = value;
+                } else {
+                    _this.set(property, value);
+                }
+                if (skipCallbacks) {
+                    return;
+                }
+                options.onChange && options.onChange(value, valueProgress, timeProgress);
+            },
+            onComplete: function(value, valueProgress, timeProgress) {
+                if (skipCallbacks) {
+                    return;
+                }
+                _this.setCoords();
+                options.onComplete && options.onComplete(value, valueProgress, timeProgress);
+            }
+        });
+    }
+});
 
 (function(global) {
     "use strict";

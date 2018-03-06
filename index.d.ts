@@ -2439,9 +2439,9 @@ export namespace fabric {
 
     getStroke(): String;
 
-    setStrokeWidth(strokeWidth: Number): Object;
+    setStrokeWidth(strokeWidth: number): Object;
 
-    getStrokeWidth(): Number;
+    getStrokeWidth(): number;
 
     stateProperties: any[];
 
